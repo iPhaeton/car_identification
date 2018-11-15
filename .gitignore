@@ -1,4 +1,7 @@
 .ipynb_checkpoints/
-data/
+stanford-train-dataset/
+siamese_model_weights/
 __pycache__/
 model/
+stanford-car-dataset-by-classes-folder/
+features/
