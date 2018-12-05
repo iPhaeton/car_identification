@@ -78,3 +78,13 @@ class LSTM_encoder:
             np.save(save_path, encoded_features)
 
         return encoded_features
+
+    def train(self, epochs, callbacks):
+        self.model.fit_generator(
+            self.generator(self.source_path, 'train', self.steps_per_epoch),
+            steps_per_epoch=self.steps_per_epoch,
+            epochs=epochs,
+            validation_data=self.generator(self.source_path, 'dev', self.validation_steps),
+            validation_steps=self.validation_steps,
+            callbacks=callbacks,
+        )
