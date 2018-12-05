@@ -5,7 +5,7 @@ import os
 import fnmatch
 import tensorflow as tf
 
-class LSTM_encoder:
+class LSTMEncoder:
     def __init__(self, regularizer, source_path, weights_path = None, rs = 0, lr = 0.00001):
         self.source_path = source_path
         self.get_metadata(source_path)
@@ -45,6 +45,14 @@ class LSTM_encoder:
         self.steps_per_epoch = steps_per_epoch
         self.validation_steps = validation_steps
 
+    def get_steps(self, mode):
+        steps = None
+        if mode == 'dev':
+            steps = self.validation_steps
+        else:
+            steps = self.steps_per_epoch
+        return steps
+
     def generator(self, path, mode, num_batches, random=True):
         counter = 0
         indices = None
@@ -68,9 +76,11 @@ class LSTM_encoder:
     def encode(self, mode, save_path=None):
         encoder = Model(inputs=self.model.input, outputs=self.model.layers[6].output)
 
+        steps = self.get_steps(mode)
+
         encoded_features = encoder.predict_generator(
-            self.generator(self.source_path, mode, self.validation_steps, random=False),
-            steps=self.validation_steps,
+            self.generator(self.source_path, mode, steps, random=False),
+            steps=steps,
             verbose=True,
         )
 
@@ -88,3 +98,12 @@ class LSTM_encoder:
             validation_steps=self.validation_steps,
             callbacks=callbacks,
         )
+
+    def predict(self, mode):
+        steps = self.get_steps(mode)
+        predictions = self.model.predict_generator(
+            self.generator(self.source_path, mode, steps, random=False),
+            steps=steps,
+            verbose=True,
+        )
+        return np.argmax(predictions, axis=2)

@@ -4,7 +4,7 @@ from keras.utils import to_categorical
 import numpy as np
 import tensorflow as tf
 
-class LSTM_decoder:
+class LSTMDecoder:
     def __init__(self, X, y, weights_path = None):
         self.X = X
         self.y = y
