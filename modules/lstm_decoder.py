@@ -47,4 +47,4 @@ class LSTMDecoder:
     def predict(self, mode):
         X = self.X_dev if mode == 'dev' else self.X_train
         predictions = self.model.predict(X, verbose = True)
-        return np.argmax(predictions, axis=1)
+        return np.argmax(predictions, axis=1), predictions
