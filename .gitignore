@@ -6,3 +6,4 @@ __pycache__/
 model/
 stanford-car-dataset-by-classes-folder/
 features/
+sandbox.ipynb
