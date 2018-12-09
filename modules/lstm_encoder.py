@@ -4,19 +4,17 @@ import numpy as np
 import os
 import fnmatch
 import tensorflow as tf
+from keras.regularizers import l2
 
 class LSTMEncoder:
-    def __init__(self, regularizer, source_path, weights_path = None, rs = 0, lr = 0.00001):
+    def __init__(self, hidden_layers, source_path, kernel_initializer='glorot_uniform', weights_path = None, output_regularizer=l2, reg = 0, lr = 0.00001):
         self.source_path = source_path
         self.get_metadata(source_path)
 
         inputs = Input(shape=self.input_shape)
-        X = Dropout(0.2)(inputs)
-        X = Dense(4096, activation='relu', kernel_regularizer=regularizer(rs))(X)
-        X = Dropout(0.2)(X)
-        X = Dense(2048, activation='relu', kernel_regularizer=regularizer(rs))(X)
-        X = Dense(2048, activation='relu', kernel_regularizer=regularizer(rs))(X)
-        X = Bidirectional(LSTM(1024, return_sequences=True, kernel_regularizer=regularizer(rs)))(X)
+        X = inputs
+        for layer in hidden_layers:
+            X = layer(X)
         outputs = TimeDistributed(Dense(self.num_classes, activation='softmax'))(X)
         
         model = Model(inputs=inputs, outputs=outputs)
@@ -107,37 +105,3 @@ class LSTMEncoder:
             verbose=True,
         )
         return np.argmax(predictions, axis=2)
-
-
-class LSTMEncoderWithBatchnorm(LSTMEncoder):
-    def __init__(self, regularizer, source_path, weights_path = None, rs = 0, lr = 0.00001):
-        self.source_path = source_path
-        self.get_metadata(source_path)
-
-        inputs = Input(shape=self.input_shape)
-        X = Dropout(0.2)(inputs)
-        X = Dense(4096, kernel_regularizer=regularizer(rs))(X)
-        X = BatchNormalization()(X)
-        X = Activation('relu')(X)
-        X = Dropout(0.2)(X)
-        X = Dense(2048, kernel_regularizer=regularizer(rs))(X)
-        X = BatchNormalization()(X)
-        X = Activation('relu')(X)
-        X = Dense(2048, kernel_regularizer=regularizer(rs))(X)
-        X = BatchNormalization()(X)
-        X = Activation('relu')(X)
-        X = Bidirectional(LSTM(1024, return_sequences=True, kernel_regularizer=regularizer(rs)))(X)
-        outputs = TimeDistributed(Dense(self.num_classes, activation='softmax'))(X)
-        
-        model = Model(inputs=inputs, outputs=outputs)
-        
-        model.compile(
-            optimizer=tf.train.AdamOptimizer(lr),
-            loss='categorical_crossentropy',
-            metrics=['categorical_accuracy'],
-        )
-        
-        if weights_path != None:
-            model.load_weights(weights_path)
-        
-        self.model = model

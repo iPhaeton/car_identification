@@ -43,3 +43,16 @@ class PlotLosses(keras.callbacks.Callback):
             print('- Validation loss:', self.val_losses[i])
             print('- Validation accuracy:', self.val_acc[i])
             print(' ')
+
+class OptimizationHistory(keras.callbacks.Callback):
+    def on_train_begin(self, logs={}):
+        self.losses = []
+        self.acc = []
+        self.val_losses = []
+        self.val_acc = []
+    
+    def on_epoch_end(self, epoch, logs={}):
+        self.losses.append(logs.get('loss'))
+        self.acc.append(logs.get('categorical_accuracy'))
+        self.val_losses.append(logs.get('val_loss'))
+        self.val_acc.append(logs.get('val_categorical_accuracy'))
