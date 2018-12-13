@@ -10,7 +10,7 @@ class LSTMDecoder:
         self.y_train = y_train
         self.X_dev = X_dev
         self.y_dev = y_dev
-        self.y_train_hot = to_categorical(self.y_train) if y_train != None else None
+        self.y_train_hot = to_categorical(self.y_train) if y_train is not None else None
         self.y_dev_hot = to_categorical(self.y_dev)
 
         input_shape = self.X_dev.shape[1:]
