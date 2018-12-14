@@ -80,22 +80,6 @@ class LSTMEncoderDecoder:
             counter += 1
             yield features, classes
 
-    def encode(self, mode, save_path=None):
-        encoder = Model(inputs=self.model.input, outputs=self.model.layers[6].output)
-
-        steps = self.get_steps(mode)
-
-        encoded_features = encoder.predict_generator(
-            self.generator(self.source_path, mode, steps, random=False),
-            steps=steps,
-            verbose=True,
-        )
-
-        if save_path != None:
-            np.save(save_path, encoded_features)
-
-        return encoded_features
-
     def train(self, epochs, callbacks):
         self.model.fit_generator(
             self.generator(self.source_path, 'train', self.steps_per_epoch),
@@ -113,4 +97,4 @@ class LSTMEncoderDecoder:
             steps=steps,
             verbose=True,
         )
-        return np.argmax(predictions, axis=2)
+        return np.argmax(predictions[:,2,:], axis=1)
