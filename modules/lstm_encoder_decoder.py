@@ -19,7 +19,7 @@ class LSTMEncoderDecoder:
         X = Dense(2048, activation='relu', name='dense_2')(X)
         X = Dense(2048, activation='relu', name='dense_3')(X)
         encoder = Bidirectional(LSTM(1024, return_sequences=True, name='lstm_1'))(X)
-        X = BatchNormalization(name='batchnorm_1')(encoder)
+        X = TimeDistributed(BatchNormalization(name='batchnorm_1'))(encoder)
         X = LSTM(1024, name='lstm_2')(X)
         outputs_encoder = TimeDistributed(Dense(self.num_classes, activation='softmax', name='output_1'))(encoder)
         outputs_decoder = Dense(48, activation='softmax', name='output_2')(X)
