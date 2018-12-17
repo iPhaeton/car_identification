@@ -7,3 +7,6 @@ model/
 stanford-car-dataset-by-classes-folder/
 features/
 sandbox.ipynb
+-objects/
+modules/yolo-tiny.h5
+modules/yolo.h5
