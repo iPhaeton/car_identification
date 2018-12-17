@@ -97,4 +97,4 @@ class LSTMEncoderDecoder:
             steps=steps,
             verbose=True,
         )
-        return np.argmax(predictions[:,2,:], axis=1)
+        return np.argmax(predictions[:,2,:], axis=1), predictions[:,2,:]
