@@ -17,17 +17,19 @@ class LSTMEncoderDecoder:
         X = Dense(4096, activation='relu', name='dense_1')(X)
         X = Dropout(0.5, name='dropout_2')(X)
         X = Dense(2048, activation='linear', name='dense_2')(X)
+        X = Dense(2048, activation='relu', name='dense_3')(X)
         X = BatchNormalization(name='batchnorm_dense_2')(X)
         X = Activation('relu')(X)
         X = Bidirectional(LSTM(1024, return_sequences=True, name='lstm_1'))(X)
-        encoder = TimeDistributed(Dense(1024, activation='relu', name='dense_3'))(X)
-        X = LSTM(1024, name='lstm_2')(encoder)
-        X = Dense(1024, activation='relu', name='dense_4')(X)
+        encoder = TimeDistributed(Dense(1024, activation='relu', name='dense_4'))(X)
+        X = keras.layers.Lambda(lambda x: x[:,0,:] + x[:,1,:])(encoder)
+        X = Dense(1024, activation='relu', name = 'dense_4')(X)
+        X = Dense(512, activation='relu', name = 'dense_5')(X)
         outputs_encoder = TimeDistributed(Dense(self.num_classes, activation='softmax', name='output_1'))(encoder)
         outputs_decoder = Dense(self.num_classes, activation='softmax', name='output_2')(X)
         outputs_decoder = Reshape((1,self.num_classes))(outputs_decoder)
         outputs = keras.layers.concatenate([outputs_encoder, outputs_decoder], axis=1)
-        
+        print(inputs)
         model = Model(inputs=inputs, outputs=outputs)
         
         model.compile(
