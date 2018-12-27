@@ -11,6 +11,7 @@ class LSTMEncoderDecoder:
     def __init__(self, source_path, kernel_initializer='glorot_uniform', weights_path = None, output_regularizer=l2, reg = 0, lr = 0.00001):
         self.source_path = source_path
         self.get_metadata(source_path)
+        print(self.input_shape)
 
         inputs = Input(shape=self.input_shape, name='input')
         X = Dropout(0.5, name='dropout_1')(inputs)
@@ -97,4 +98,4 @@ class LSTMEncoderDecoder:
             steps=steps,
             verbose=True,
         )
-        return np.argmax(predictions[:,2,:], axis=1), predictions[:,2,:]
+        return np.argmax(predictions[:,self.input_shape[0],:], axis=1), predictions[:,self.input_shape[0],:]
