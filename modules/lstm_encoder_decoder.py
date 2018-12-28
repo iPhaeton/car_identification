@@ -11,10 +11,10 @@ class LSTMEncoderDecoder:
     def __init__(self, source_path, kernel_initializer='glorot_uniform', weights_path = None, output_regularizer=l2, reg = 0, lr = 0.00001):
         self.source_path = source_path
         self.get_metadata(source_path)
-        print(self.input_shape)
 
         inputs = Input(shape=self.input_shape, name='input')
         #X = Dropout(0.2, name='dropout_1')(inputs)
+        X = inputs
         X = Dense(4096, activation='relu', name='dense_1')(X)
         #X = Dropout(0.2, name='dropout_2')(X)
         X = Dense(2048, activation='relu', name='dense_2')(X)
