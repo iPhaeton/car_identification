@@ -13,7 +13,8 @@ class LSTMEncoderDecoder:
         self.get_metadata(source_path)
 
         inputs = Input(shape=self.input_shape, name='input')
-        X = Dropout(0.2, name='dropout_1')(inputs)
+        #X = Dropout(0.2, name='dropout_1')(inputs)
+        X = inputs
         X = Dense(4096, activation='relu', name='dense_1')(X)
         #X = Dropout(0.2, name='dropout_2')(X)
         X = Dense(2048, activation='relu', name='dense_2')(X)
