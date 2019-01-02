@@ -12,3 +12,5 @@ home/modules/mask_rcnn_inception_v2_coco_2018_01_28/
 home/modules/mask_rcnn_resnet50_atrous_coco_2018_01_28/
 .floydexpt
 input/
+home/.png
+home/images/
