@@ -8,4 +8,6 @@ input:
     source: phaeton/datasets/detection-models/1
   - destination: convnet-weghts
     source: phaeton/datasets/car-model-weights/1
+  - destination: model
+    source: phaeton/datasets/car-identification-model/2
 command: python app.py

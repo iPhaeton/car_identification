@@ -1,17 +1,19 @@
 from flask import Flask, jsonify, request, send_file
 from modules.detector import Detector
 from keras.preprocessing.image import img_to_array, load_img, array_to_img, save_img
-from werkzeug.utils import secure_filename
-import os
+from keras.models import load_model as load_model_from_file
 from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocess_input
 from keras.applications.inception_v3 import InceptionV3, preprocess_input as inception_preprocess_input
 from keras.applications.xception import Xception, preprocess_input as xception_preprocess_input
+from werkzeug.utils import secure_filename
+import os
 import sys
 sys.path.append("..")
 from utils.models import get_base_model
 from constants import img_size
 import numpy as np
 from PIL import Image
+import json
 
 app = Flask(__name__)
 
@@ -34,6 +36,8 @@ image_dir = './images'
 
 detector = None
 base_models = None
+model = None
+classnames = None
 
 def load_detector():
     global detector
@@ -43,7 +47,7 @@ def load_detector():
 
 def load_base_models():
     global base_models
-    if base_models == None:
+    if base_models is None:
         base_models = []
         for model in pretrained_models:
             base_models.append({
@@ -51,6 +55,15 @@ def load_base_models():
                 'preprocessor': model['preprocessor'],
             })
     return base_models
+
+def load_model():
+    global model
+    global classnames
+    if model == None:
+        model = load_model_from_file('../input/model/car-identification.h5')
+    if classnames is None:
+        classnames = np.load('../input/model/classnames.npy')
+    return model, classnames
 
 def detect(input_image):
     detector = load_detector()
@@ -94,20 +107,24 @@ def evaluate():
     input_image = request.files.get('image')
     car_image = detect(input_image)
     base_features = get_base_features(car_image)
-    
     features = preprocess_features(base_features, 3)
-    print(features.shape)
-
-    output_filepath = os.path.join(image_dir, 'recognized_image.jpg')
-    save_img(output_filepath, car_image)
+    features = np.expand_dims(features, axis=0)
     
-    return send_file(output_filepath, mimetype='image/jpg')
+    model, classnames = load_model()
+    predictions = model.predict(features)
+    predictions = predictions[0][3]
+    probs = np.flip(np.sort(predictions))[0:5]
+    predicted_classes = np.flip(np.argsort(predictions))[0:5]
+    predicted_classnames = classnames[predicted_classes]
 
-# The following is for running command `python app.py` in local development, not required for serving on FloydHub.
+    return json.dumps([probs.tolist(), predicted_classes.tolist(), predicted_classnames.tolist()])
+
 if __name__ == "__main__":
     print('* Loading detection model...')
     load_detector()
     print('* Loading base models...')
     load_base_models()
+    print('* Loading model...')
+    load_model()
     print("* Starting web server... please wait until server has fully started")
     app.run(host='0.0.0.0', threaded=False)
