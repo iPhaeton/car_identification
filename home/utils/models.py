@@ -1,7 +1,7 @@
 from keras.layers import AveragePooling2D, MaxPooling2D
 from keras import Model
 
-def get_base_model(model_constructor, preprocessor, img_size, pooling=None, verbose=True, layer=None):    
+def get_base_model(model_constructor, img_size, pooling=None, verbose=True, layer=None):    
     base_model = model_constructor(include_top=False, weights='imagenet', input_shape=(img_size, img_size, 3), pooling=pooling)
     
     model = None
