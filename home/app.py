@@ -7,12 +7,16 @@ import os
 app = Flask(__name__)
 
 detector = None
+base_models = None
 
 def load_detector():
     global detector
     if detector == None:
         detector = Detector('yolo')
     return detector
+
+def load_base_models():
+    
 
 # The request method is POST (this method enables your to send arbitrary data to the endpoint in the request body, including images, JSON, encoded-data, etc.)
 @app.route('/', methods=["POST"])
