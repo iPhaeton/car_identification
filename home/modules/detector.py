@@ -18,7 +18,7 @@ class Detector:
         else:
             raise ValueError('Model ' + model + 'not fould. you should download the model and put it into "modules" directory.')
 
-        detector.setModelPath(os.path.join(execution_path , '../input/models/' + model + '.h5'))
+        detector.setModelPath(os.path.join(execution_path , '../input/models-detection/' + model + '.h5'))
         detector.loadModel()
         custom_objects = detector.CustomObjects(car=True)
 
