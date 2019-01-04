@@ -24,6 +24,7 @@ pretrained_models = [
         'constructor': InceptionV3,
         'preprocessor': inception_preprocess_input,
     },
+    
     {
         'constructor': Xception,
         'preprocessor': xception_preprocess_input,
@@ -126,6 +127,7 @@ print('App ready')
 
 @app.route('/', methods=["POST"])
 def evaluate():
+    print('Evaluating...')
     input_image = request.files.get('image')
     detect(input_image)
     base_features = get_base_features(image_dir)
