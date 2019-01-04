@@ -15,8 +15,6 @@ import numpy as np
 from PIL import Image
 import json
 
-app = Flask(__name__)
-
 pretrained_models = [
     {
         'constructor': ResNet50,
@@ -109,13 +107,22 @@ def get_base_features(filepath):
         )
 
         base_model_features = base_model['model'].predict_generator(generator, len(generator), verbose=0)
-        print(base_model_features)
         features.append(base_model_features)
 
     return features
 
 def preprocess_features(features, steps):
     return np.repeat(np.concatenate(features, axis=1), repeats=steps, axis=0)
+
+
+app = Flask(__name__)
+print('* Loading detection model...')
+load_detector()
+print('* Loading base models...')
+load_base_models()
+print('* Loading model...')
+load_model()
+print('App ready')
 
 @app.route('/', methods=["POST"])
 def evaluate():
@@ -124,7 +131,6 @@ def evaluate():
     base_features = get_base_features(image_dir)
     features = preprocess_features(base_features, 3)
     features = np.expand_dims(features, axis=0)
-    print(features.shape)
     model, classnames = load_model()
     predictions = model.predict(features)
     predictions = predictions[0][3]
@@ -135,11 +141,5 @@ def evaluate():
     return json.dumps([probs.tolist(), predicted_classes.tolist(), predicted_classnames.tolist()])
 
 if __name__ == "__main__":
-    print('* Loading detection model...')
-    load_detector()
-    print('* Loading base models...')
-    load_base_models()
-    print('* Loading model...')
-    load_model()
     print("* Starting web server... please wait until server has fully started")
     app.run(host='0.0.0.0', threaded=False)
