@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, send_file
 from modules.detector import Detector
-from keras.preprocessing.image import img_to_array, load_img, array_to_img, save_img
+from keras.preprocessing.image import img_to_array, load_img, array_to_img, save_img, ImageDataGenerator
 from keras.models import load_model as load_model_from_file
 from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocess_input
 from keras.applications.inception_v3 import InceptionV3, preprocess_input as inception_preprocess_input
@@ -33,6 +33,7 @@ pretrained_models = [
 ]
 
 image_dir = './images'
+detection_dir = 'detection'
 
 detector = None
 base_models = None
@@ -68,16 +69,19 @@ def load_model():
 def detect(input_image):
     detector = load_detector()
 
-    filename = secure_filename('recognizing_image.jpg')
-    input_filepath = os.path.join(image_dir, filename)
+    filename = secure_filename('image.jpg')
+    dir_path = os.path.join(image_dir, detection_dir)
+    filepath = os.path.join(dir_path, filename)
     
     if os.path.exists(image_dir) == False:
         os.mkdir(image_dir)
+    if os.path.exists(os.path.join(image_dir, detection_dir)) == False:
+        os.mkdir(dir_path)
 
-    input_image.save(input_filepath)
+    input_image.save(filepath)
     
     car_image = detector.crop_image(
-        source_image=input_filepath,
+        source_image=filepath,
         input_type='file',
         params={
             'detect_largest_box': True,
@@ -85,17 +89,28 @@ def detect(input_image):
         }
     )
 
-    return car_image
+    car_image.save(filepath)
 
-def get_base_features(input_image):
+def get_base_features(filepath):
     base_models = load_base_models()
-    x = img_to_array(input_image.resize((img_size, img_size), Image.NEAREST))
-    x = np.expand_dims(x, axis=0)
+
+    datagen = ImageDataGenerator(preprocessing_function=resnet50_preprocess_input)
 
     features = []
     for base_model in base_models:
-        input_x = base_model['preprocessor'](x)
-        features.append(base_model['model'].predict(input_x))
+        datagen = ImageDataGenerator(preprocessing_function=base_model['preprocessor'])
+        generator = datagen.flow_from_directory(
+            filepath,
+            target_size=(img_size, img_size),
+            batch_size=1,
+            class_mode='categorical',
+            shuffle=False,
+            seed=0,
+        )
+
+        base_model_features = base_model['model'].predict_generator(generator, len(generator), verbose=0)
+        print(base_model_features)
+        features.append(base_model_features)
 
     return features
 
@@ -105,11 +120,11 @@ def preprocess_features(features, steps):
 @app.route('/', methods=["POST"])
 def evaluate():
     input_image = request.files.get('image')
-    car_image = detect(input_image)
-    base_features = get_base_features(car_image)
+    detect(input_image)
+    base_features = get_base_features(image_dir)
     features = preprocess_features(base_features, 3)
     features = np.expand_dims(features, axis=0)
-    
+    print(features.shape)
     model, classnames = load_model()
     predictions = model.predict(features)
     predictions = predictions[0][3]
