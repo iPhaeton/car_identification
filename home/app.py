@@ -17,16 +17,16 @@ import json
 
 pretrained_models = [
     {
-        'constructor': ResNet50,
+        'path': '../input/base-models/resnet50.h5',
         'preprocessor': resnet50_preprocess_input,
     },
     {
-        'constructor': InceptionV3,
+        'path': '../input/base-models/inception_v3.h5',
         'preprocessor': inception_preprocess_input,
     },
     
     {
-        'constructor': Xception,
+        'path': '../input/base-models/xception.h5',
         'preprocessor': xception_preprocess_input,
     }
 ]
@@ -51,7 +51,7 @@ def load_base_models():
         base_models = []
         for model in pretrained_models:
             base_models.append({
-                'model': get_base_model(model['constructor'], img_size=img_size, pooling='avg', verbose=False),
+                'model': load_model_from_file(model['path']),
                 'preprocessor': model['preprocessor'],
             })
     return base_models
@@ -144,4 +144,4 @@ def evaluate():
 
 if __name__ == "__main__":
     print("* Starting web server... please wait until server has fully started")
-    app.run(host='0.0.0.0', threaded=False)
+    app.run(host='0.0.0.0', threaded=False, debug=True)

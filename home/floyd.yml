@@ -6,8 +6,8 @@ env: tensorflow-1.11
 input:
   - destination: models-detection
     source: phaeton/datasets/detection-models/1
-  - destination: convnet-weghts
-    source: phaeton/datasets/car-model-weights/1
+  - destination: base-models
+    source: phaeton/datasets/base_models_imagenet/1
   - destination: model
     source: phaeton/datasets/car-identification-model/2
 command: python app.py
