@@ -5,9 +5,9 @@ mode: serve
 env: tensorflow-1.11
 input:
   - destination: models-detection
-    source: phaeton/datasets/detection-models/1
+    source: phaeton/datasets/detection-models/2
   - destination: base-models
-    source: phaeton/datasets/base_models_imagenet/1
+    source: phaeton/datasets/base_models_imagenet/3
   - destination: model
-    source: phaeton/datasets/car-identification-model/2
+    source: phaeton/datasets/car-identification-model/3
 command: python app.py

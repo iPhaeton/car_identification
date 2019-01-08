@@ -129,6 +129,13 @@ print('App ready')
 def evaluate():
     print('Evaluating...')
     input_image = request.files.get('image')
+    
+    limit = request.form.get('limit')
+    if limit == None:
+        limit = 5
+    else:
+        limit = int(limit)
+
     detect(input_image)
     base_features = get_base_features(image_dir)
     features = preprocess_features(base_features, 3)
@@ -136,8 +143,8 @@ def evaluate():
     model, classnames = load_model()
     predictions = model.predict(features)
     predictions = predictions[0][3]
-    probs = np.flip(np.sort(predictions))[0:5]
-    predicted_classes = np.flip(np.argsort(predictions))[0:5]
+    probs = np.flip(np.sort(predictions))[0:limit]
+    predicted_classes = np.flip(np.argsort(predictions))[0:limit]
     predicted_classnames = classnames[predicted_classes]
 
     return json.dumps([probs.tolist(), predicted_classes.tolist(), predicted_classnames.tolist()])
