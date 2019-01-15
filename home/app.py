@@ -159,6 +159,10 @@ def evaluate():
 
     return json.dumps([probs.tolist(), predicted_classes.tolist(), predicted_classnames.tolist()])
 
+@app.route('/preview', methods=['GET'])
+def get_preview():
+    return 'Will return a preview'
+
 if __name__ == "__main__":
     print("* Starting web server... please wait until server has fully started")
     app.run(host='0.0.0.0', threaded=False, debug=True)
