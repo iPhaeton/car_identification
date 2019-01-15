@@ -1,5 +1,6 @@
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request, send_file, make_response
 from modules.detector import Detector
+from modules.exception import ServerException
 from keras.preprocessing.image import img_to_array, load_img, array_to_img, save_img, ImageDataGenerator
 from keras.models import model_from_json
 from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocess_input
@@ -14,6 +15,8 @@ from constants import img_size
 import numpy as np
 from PIL import Image
 import json
+import pandas
+import base64
 
 pretrained_models = [
     {
@@ -36,11 +39,13 @@ pretrained_models = [
 
 image_dir = './images'
 detection_dir = 'detection'
+preview_dir = '../input/preview'
 
 detector = None
 base_models = None
 model = None
 classnames = None
+preview_data = pandas.read_csv('../input/preview/preview_data.csv')
 
 def load_detector():
     global detector
@@ -127,13 +132,13 @@ def preprocess_features(features, steps):
 
 
 app = Flask(__name__)
-print('* Loading detection model...')
-load_detector()
-print('* Loading base models...')
-load_base_models()
-print('* Loading model...')
-load_model()
-print('App ready')
+# print('* Loading detection model...')
+# load_detector()
+# print('* Loading base models...')
+# load_base_models()
+# print('* Loading model...')
+# load_model()
+# print('App ready')
 
 @app.route('/', methods=["POST"])
 def evaluate():
@@ -161,7 +166,31 @@ def evaluate():
 
 @app.route('/preview', methods=['GET'])
 def get_preview():
-    return 'Will return a preview'
+    filename = request.args.get('filename')
+    five_top_names = None
+    five_top_probs = None
+
+    if filename == None:
+        index = np.random.randint(0, preview_data.shape[0])
+        filename = preview_data['filename'][index]
+        five_top_names = preview_data['five_top_names'][index]
+        five_top_probs = preview_data['five_top_probs'][index]
+    
+    file_path = os.path.join(preview_dir, filename)
+    
+    if (filename != None) & (os.path.exists(file_path) == False):
+        raise ServerException(f'No file "{file_path}" among previews', status_code=400)
+
+    with open(file_path, "rb") as image_file:
+        image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
+
+    return json.dumps({'image_base64': image_base64, 'classes': five_top_names, 'probs': five_top_probs})
+
+@app.errorhandler(ServerException)
+def handle_server_error(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
 
 if __name__ == "__main__":
     print("* Starting web server... please wait until server has fully started")
