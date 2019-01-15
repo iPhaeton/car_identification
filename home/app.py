@@ -184,7 +184,9 @@ def get_preview():
     with open(file_path, "rb") as image_file:
         image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
 
-    return json.dumps({'image_base64': image_base64, 'classes': five_top_names, 'probs': five_top_probs})
+    response = make_response(json.dumps({'image_base64': image_base64, 'classes': five_top_names, 'probs': five_top_probs}))
+    response.headers['Access-Control-Allow-Origin'] = '*' #todo: set an appropriate value
+    return response
 
 @app.errorhandler(ServerException)
 def handle_server_error(error):

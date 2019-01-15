@@ -10,4 +10,6 @@ input:
     source: phaeton/datasets/base_models_imagenet/4
   - destination: model
     source: phaeton/datasets/car-identification-model/4
+  - destination: preview
+    source: 'phaeton/datasets/stanford_cars_preview/1'
 command: python app.py
