@@ -140,6 +140,12 @@ app = Flask(__name__)
 # load_model()
 # print('App ready')
 
+def create_response(response_string, status_code=200):
+    response = make_response(response_string)
+    response.headers['Access-Control-Allow-Origin'] = '*' #todo: set an appropriate value
+    response.status_code = status_code
+    return response
+
 @app.route('/', methods=["POST"])
 def evaluate():
     print('Evaluating...')
@@ -178,14 +184,14 @@ def get_preview():
     
     file_path = os.path.join(preview_dir, filename)
     
+    response = 'Something went wrong'
     if (filename != None) & (os.path.exists(file_path) == False):
-        raise ServerException(f'No file "{file_path}" among previews', status_code=400)
-
-    with open(file_path, "rb") as image_file:
-        image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
-
-    response = make_response(json.dumps({'image_base64': image_base64, 'classes': five_top_names, 'probs': five_top_probs}))
-    response.headers['Access-Control-Allow-Origin'] = '*' #todo: set an appropriate value
+        response = create_response(json.dumps({'error': f'No file "{file_path}" among previews'}), 400)
+    else:
+        with open(file_path, "rb") as image_file:
+            image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
+        response = create_response(json.dumps({'image_base64': image_base64, 'classes': five_top_names, 'probs': five_top_probs}))
+        
     return response
 
 @app.errorhandler(ServerException)
