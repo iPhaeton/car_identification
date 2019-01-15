@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, send_file
 from modules.detector import Detector
 from keras.preprocessing.image import img_to_array, load_img, array_to_img, save_img, ImageDataGenerator
-from keras.models import load_model as load_model_from_file
+from keras.models import model_from_json
 from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocess_input
 from keras.applications.inception_v3 import InceptionV3, preprocess_input as inception_preprocess_input
 from keras.applications.xception import Xception, preprocess_input as xception_preprocess_input
@@ -17,16 +17,19 @@ import json
 
 pretrained_models = [
     {
-        'path': '../input/base-models/resnet50.h5',
+        'path': '../input/base-models/resnet50.json',
+        'weights': '../input/base-models/resnet50.h5',
         'preprocessor': resnet50_preprocess_input,
     },
     {
-        'path': '../input/base-models/inception_v3.h5',
+        'path': '../input/base-models/inception_v3.json',
+        'weights': '../input/base-models/inception_v3.h5',
         'preprocessor': inception_preprocess_input,
     },
     
     {
-        'path': '../input/base-models/xception.h5',
+        'path': '../input/base-models/xception.json',
+        'weights': '../input/base-models/xception.h5',
         'preprocessor': xception_preprocess_input,
     }
 ]
@@ -45,13 +48,20 @@ def load_detector():
         detector = Detector('yolo')
     return detector
 
+def load_model_from_file(path, weights):
+    with open(path, 'r') as inputfile:
+        model_json = json.load(inputfile)
+    model = model_from_json(model_json)
+    model.load_weights(weights)
+    return model
+
 def load_base_models():
     global base_models
     if base_models is None:
         base_models = []
         for model in pretrained_models:
             base_models.append({
-                'model': load_model_from_file(model['path']),
+                'model': load_model_from_file(model['path'], model['weights']),
                 'preprocessor': model['preprocessor'],
             })
     return base_models
@@ -60,7 +70,7 @@ def load_model():
     global model
     global classnames
     if model == None:
-        model = load_model_from_file('../input/model/car-identification.h5')
+        model = load_model_from_file('../input/model/car-identification.json', '../input/model/car-identification.h5')
     if classnames is None:
         classnames = np.load('../input/model/classnames.npy')
     return model, classnames

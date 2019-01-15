@@ -7,7 +7,7 @@ input:
   - destination: models-detection
     source: phaeton/datasets/detection-models/2
   - destination: base-models
-    source: phaeton/datasets/base_models_imagenet/3
+    source: phaeton/datasets/base_models_imagenet/4
   - destination: model
-    source: phaeton/datasets/car-identification-model/3
+    source: phaeton/datasets/car-identification-model/4
 command: python app.py
