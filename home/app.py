@@ -164,7 +164,7 @@ def evaluate():
     predicted_classes = np.flip(np.argsort(predictions))[0:limit]
     predicted_classnames = classnames[predicted_classes]
 
-    return json.dumps([probs.tolist(), predicted_classes.tolist(), predicted_classnames.tolist()])
+    return json.dumps({'probs': probs.tolist(), 'classes': predicted_classnames.tolist()})
 
 @app.route('/preview', methods=['GET'])
 def get_preview():
