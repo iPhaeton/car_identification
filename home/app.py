@@ -17,6 +17,7 @@ from PIL import Image
 import json
 import pandas
 import base64
+import re
 
 pretrained_models = [
     {
@@ -180,7 +181,10 @@ def get_preview():
         index = np.random.randint(0, preview_data.shape[0])
         filename = preview_data['filename'][index]
         five_top_names = preview_data['five_top_names'][index]
+        five_top_names = re.sub('[!\n]', '', five_top_names)[2:-2].split("' '")
         five_top_probs = preview_data['five_top_probs'][index]
+        five_top_probs = re.sub('[!\n]', '', five_top_probs)[2:-1].split("  ")
+        five_top_probs = list(map(lambda x: float(x), five_top_probs))
     
     file_path = os.path.join(preview_dir, filename)
     
