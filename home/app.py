@@ -134,13 +134,13 @@ def preprocess_features(features, steps):
 
 
 app = Flask(__name__)
-# print('* Loading detection model...')
-# load_detector()
-# print('* Loading base models...')
-# load_base_models()
-# print('* Loading model...')
-# load_model()
-# print('App ready')
+print('* Loading detection model...')
+load_detector()
+print('* Loading base models...')
+load_base_models()
+print('* Loading model...')
+load_model()
+print('App ready')
 
 @app.route('/', methods=["POST"])
 def evaluate():
