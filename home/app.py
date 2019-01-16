@@ -175,14 +175,17 @@ def get_preview():
     if filename == None:
         index = np.random.randint(0, preview_data.shape[0])
         filename = preview_data['filename'][index]
+    else:
+        index = preview_data.index[preview_data['filename'] == filename][0]
+        print(index)
         
-        five_top_names = preview_data['five_top_names'][index]
-        five_top_names = re.sub('[!\n]', '', five_top_names)[2:-2].split("' '")
+    five_top_names = preview_data['five_top_names'][index]
+    five_top_names = re.sub('[!\n]', '', five_top_names)[2:-2].split("' '")
         
-        five_top_probs = preview_data['five_top_probs'][index]
-        five_top_probs = re.sub('[!\n]', '', five_top_probs)[1:-1].split("  ")
-        five_top_probs = filter(lambda x: len(x) != 0,five_top_probs)
-        five_top_probs = list(map(lambda x: float(x.strip()), five_top_probs))
+    five_top_probs = preview_data['five_top_probs'][index]
+    five_top_probs = re.sub('[!\n]', '', five_top_probs)[1:-1].split("  ")
+    five_top_probs = filter(lambda x: len(x) != 0,five_top_probs)
+    five_top_probs = list(map(lambda x: float(x.strip()), five_top_probs))
     
     file_path = os.path.join(preview_dir, filename)
     
@@ -209,7 +212,7 @@ def get_thumbnails():
     for index in indices:
         filename = preview_data['filename'][index]
         file_path = os.path.join(preview_dir, filename)
-        image_base64 = get_image_of_size(file_path, [200, 200], False)
+        image_base64 = get_image_of_size(file_path, [150, 150], False)
         thumbnails.append({'image_base64': image_base64, 'filename': filename})
     
     response = create_response(json.dumps(thumbnails))
