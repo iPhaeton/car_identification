@@ -192,6 +192,26 @@ def get_preview():
         
     return response
 
+@app.route('/thumbnails', methods=['GET'])
+def get_thumbnails():
+    quantity = request.args.get('quantity')
+    
+    if quantity == None:
+        response = create_response(json.dumps({'error': 'Parameter "quantity" is required'}), 400)
+        return response
+
+    indices = np.random.choice(preview_data.shape[0], int(quantity))
+    
+    thumbnails = []
+    for index in indices:
+        filename = preview_data['filename'][index]
+        file_path = os.path.join(preview_dir, filename)
+        image_base64 = get_image_of_size(file_path, [200, 200], False)
+        thumbnails.append({'image_base64': image_base64, 'filename': filename})
+    
+    response = create_response(json.dumps(thumbnails))
+    return response
+
 if __name__ == "__main__":
     print("* Starting web server... please wait until server has fully started")
     app.run(host='0.0.0.0', threaded=False, debug=True)
