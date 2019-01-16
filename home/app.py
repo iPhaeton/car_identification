@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request, send_file, make_response
 from modules.detector import Detector
-from modules.exception import ServerException
 from keras.preprocessing.image import img_to_array, load_img, array_to_img, save_img, ImageDataGenerator
 from keras.models import model_from_json
 from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocess_input
@@ -191,12 +190,6 @@ def get_preview():
         image_base64 = get_image_of_size(file_path, [800, 500], True)
         response = create_response(json.dumps({'image_base64': image_base64, 'classes': five_top_names, 'probs': five_top_probs}))
         
-    return response
-
-@app.errorhandler(ServerException)
-def handle_server_error(error):
-    response = jsonify(error.to_dict())
-    response.status_code = error.status_code
     return response
 
 if __name__ == "__main__":
