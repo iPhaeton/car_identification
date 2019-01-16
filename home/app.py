@@ -11,6 +11,7 @@ import os
 import sys
 sys.path.append("..")
 from utils.models import get_base_model
+from utils.response import create_response
 from constants import img_size
 import numpy as np
 from PIL import Image
@@ -140,12 +141,6 @@ app = Flask(__name__)
 # print('* Loading model...')
 # load_model()
 # print('App ready')
-
-def create_response(response_string, status_code=200):
-    response = make_response(response_string)
-    response.headers['Access-Control-Allow-Origin'] = '*' #todo: set an appropriate value
-    response.status_code = status_code
-    return response
 
 @app.route('/', methods=["POST"])
 def evaluate():
