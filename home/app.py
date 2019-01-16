@@ -12,6 +12,7 @@ import sys
 sys.path.append("..")
 from utils.models import get_base_model
 from utils.response import create_response
+from utils.image import get_image_of_size
 from constants import img_size
 import numpy as np
 from PIL import Image
@@ -187,8 +188,7 @@ def get_preview():
     if (filename != None) & (os.path.exists(file_path) == False):
         response = create_response(json.dumps({'error': f'No file "{file_path}" among previews'}), 400)
     else:
-        with open(file_path, "rb") as image_file:
-            image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
+        image_base64 = get_image_of_size(file_path, [800, 500], True)
         response = create_response(json.dumps({'image_base64': image_base64, 'classes': five_top_names, 'probs': five_top_probs}))
         
     return response
