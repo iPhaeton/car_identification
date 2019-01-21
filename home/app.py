@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, send_file, make_response
+#from flask_caching import Cache
 from modules.detector import Detector
 from keras.preprocessing.image import img_to_array, load_img, array_to_img, save_img, ImageDataGenerator
 from keras.models import model_from_json
@@ -10,7 +11,7 @@ import os
 import sys
 sys.path.append("..")
 from utils.models import get_base_model
-from utils.response import create_response
+from utils.response import create_response, get_pretty_classnames
 from utils.image import get_image_of_size
 from constants import img_size
 import numpy as np
@@ -19,6 +20,7 @@ import json
 import pandas
 import base64
 import re
+import pickle
 
 pretrained_models = [
     {
@@ -48,6 +50,11 @@ base_models = None
 model = None
 classnames = None
 preview_data = pandas.read_csv('../input/preview/preview_data.csv')
+
+with open('../input/preview/classnames_map.json', 'rb') as fp:
+    classnames_map = pickle.load(fp)
+
+environment = os.environ.get('ENV')
 
 def load_detector():
     global detector
@@ -132,22 +139,21 @@ def get_base_features(filepath):
 def preprocess_features(features, steps):
     return np.repeat(np.concatenate(features, axis=1), repeats=steps, axis=0)
 
-
+print(f'Starting in {environment} environment...')
 app = Flask(__name__)
-print('* Loading detection model...')
-load_detector()
-print('* Loading base models...')
-load_base_models()
-print('* Loading model...')
-load_model()
-print('App ready')
+#cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+if environment != 'local':
+    print('* Loading detection model...')
+    load_detector()
+    print('* Loading base models...')
+    load_base_models()
+    print('* Loading model...')
+    load_model()
+    print('App ready')
 
-@app.route('/', methods=["POST"])
-def evaluate():
+#@cache.memoize(3600)
+def predict(input_image, limit):
     print('Evaluating...')
-    input_image = request.files.get('image')
-    
-    limit = request.form.get('limit')
     if limit == None:
         limit = 5
     else:
@@ -160,11 +166,20 @@ def evaluate():
     model, classnames = load_model()
     predictions = model.predict(features)
     predictions = predictions[0][3]
-    probs = np.flip(np.sort(predictions))[0:limit]
-    predicted_classes = np.flip(np.argsort(predictions))[0:limit]
+    probs = np.flip(np.sort(predictions), axis=0)[0:limit]
+    predicted_classes = np.flip(np.argsort(predictions), axis=0)[0:limit]
     predicted_classnames = classnames[predicted_classes]
+    predicted_classnames = get_pretty_classnames(predicted_classnames.tolist(), classnames_map)
 
-    return json.dumps({'probs': probs.tolist(), 'classes': predicted_classnames.tolist()})
+    return json.dumps({'probs': probs.tolist(), 'classes': predicted_classnames})
+
+@app.route('/', methods=["POST"])
+def evaluate():
+    input_image = request.files.get('image')
+    limit = request.form.get('limit')
+    res_json =  predict(input_image, limit)
+    response = create_response(request, res_json)
+    return response
 
 @app.route('/preview', methods=['GET'])
 def get_preview():
@@ -181,6 +196,8 @@ def get_preview():
         
     five_top_names = preview_data['five_top_names'][index]
     five_top_names = re.sub('[!\n]', '', five_top_names)[2:-2].split("' '")
+    five_top_names = list(map(lambda x: x.strip(), five_top_names))
+    five_top_names = get_pretty_classnames(five_top_names, classnames_map)
         
     five_top_probs = preview_data['five_top_probs'][index]
     five_top_probs = re.sub('[!\n]', '', five_top_probs)[1:-1].split("  ")
@@ -191,10 +208,10 @@ def get_preview():
     
     response = 'Something went wrong'
     if (filename != None) & (os.path.exists(file_path) == False):
-        response = create_response(json.dumps({'error': f'No file "{file_path}" among previews'}), 400)
+        response = create_response(request, json.dumps({'error': f'No file "{file_path}" among previews'}), 400)
     else:
         image_base64 = get_image_of_size(file_path, [800, 500], True)
-        response = create_response(json.dumps({'image_base64': image_base64, 'classes': five_top_names, 'probs': five_top_probs}))
+        response = create_response(request, json.dumps({'image_base64': image_base64, 'classes': five_top_names, 'probs': five_top_probs}))
         
     return response
 
@@ -203,7 +220,7 @@ def get_thumbnails():
     quantity = request.args.get('quantity')
     
     if quantity == None:
-        response = create_response(json.dumps({'error': 'Parameter "quantity" is required'}), 400)
+        response = create_response(request, json.dumps({'error': 'Parameter "quantity" is required'}), 400)
         return response
 
     indices = np.random.choice(preview_data.shape[0], int(quantity))
@@ -212,12 +229,12 @@ def get_thumbnails():
     for index in indices:
         filename = preview_data['filename'][index]
         file_path = os.path.join(preview_dir, filename)
-        image_base64 = get_image_of_size(file_path, [150, 150], False)
+        image_base64 = get_image_of_size(file_path, [150, 150], True)
         thumbnails.append({'image_base64': image_base64, 'filename': filename})
     
-    response = create_response(json.dumps(thumbnails))
+    response = create_response(request, json.dumps(thumbnails))
     return response
 
 if __name__ == "__main__":
     print("* Starting web server... please wait until server has fully started")
-    app.run(host='0.0.0.0', threaded=False, debug=True)
+    app.run(host='0.0.0.0', threaded=False, debug = (environment == 'local') | (environment == 'development'))

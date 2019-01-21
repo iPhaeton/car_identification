@@ -1,0 +1,12 @@
+./input/archives
+./input/car-data
+./input/convnet_weights
+./input/cropped_car_data
+./input/datasets
+./input/features
+./input/masked_car_data
+./input/models-segmentation
+./input/siamese_model_weights
+./input/stanford-car-dataset-by-classes-folder
+.DS_Store
+.ipynb_checkpoints

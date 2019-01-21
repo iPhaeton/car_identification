@@ -7,3 +7,8 @@ class_type_to_index = {
     'body': 2,
     'year': 3,
 }
+
+allowed_origins = [
+    'http://68.183.4.242',
+    'http://localhost:3000'
+]

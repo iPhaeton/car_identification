@@ -1,0 +1,20 @@
+version: "3.6"
+services:
+  frontend:
+    environment:
+      - NODE_ENV=production
+    image: 'iphaeton/car-identification-client:latest'
+    ports:
+      - '80:8080'
+    deploy:
+      restart_policy:
+        condition: on-failure  
+  backend:
+    environment:
+      - ENV=production
+    image: 'iphaeton/car-identification:latest'
+    ports:
+      - '5000:5000'
+    deploy:
+      restart_policy:
+        condition: on-failure
