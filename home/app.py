@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, send_file, make_response
-#from flask_caching import Cache
+from flask_caching import Cache
 from modules.detector import Detector
 from keras.preprocessing.image import img_to_array, load_img, array_to_img, save_img, ImageDataGenerator
 from keras.models import model_from_json
@@ -21,6 +21,7 @@ import pandas
 import base64
 import re
 import pickle
+from io import BytesIO
 
 pretrained_models = [
     {
@@ -101,7 +102,8 @@ def detect(input_image):
     if os.path.exists(os.path.join(image_dir, detection_dir)) == False:
         os.mkdir(dir_path)
 
-    input_image.save(filepath)
+    with open(filepath, "wb") as fh:
+        fh.write(input_image)
     
     car_image = detector.crop_image(
         source_image=filepath,
@@ -141,7 +143,7 @@ def preprocess_features(features, steps):
 
 print(f'Starting in {environment} environment...')
 app = Flask(__name__)
-#cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 if environment != 'local':
     print('* Loading detection model...')
     load_detector()
@@ -151,7 +153,7 @@ if environment != 'local':
     load_model()
     print('App ready')
 
-#@cache.memoize(3600)
+@cache.memoize(3600)
 def predict(input_image, limit):
     print('Evaluating...')
     if limit == None:
@@ -176,6 +178,8 @@ def predict(input_image, limit):
 @app.route('/', methods=["POST"])
 def evaluate():
     input_image = request.files.get('image')
+    input_image = input_image.read()
+    
     limit = request.form.get('limit')
     res_json =  predict(input_image, limit)
     response = create_response(request, res_json)
