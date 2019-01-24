@@ -6,6 +6,7 @@ import fnmatch
 import tensorflow as tf
 from keras.regularizers import l2
 import keras
+from keras import backend as K
 
 class LSTMEncoderDecoder:
     def __init__(self, source_path, kernel_initializer='glorot_uniform', weights_path = None, output_regularizer=l2, reg = 0, lr = 0.00001):
@@ -13,21 +14,24 @@ class LSTMEncoderDecoder:
         self.get_metadata(source_path)
 
         inputs = Input(shape=self.input_shape, name='input')
-        #X = Dropout(0.2, name='dropout_1')(inputs)
+        
         X = inputs
         X = Dense(4096, activation='relu', name='dense_1')(X)
-        #X = Dropout(0.2, name='dropout_2')(X)
+        
         X = Dense(2048, activation='relu', name='dense_2')(X)
         X = Dense(2048, activation='relu', name='dense_3')(X)
+
+        feature_vector = X[:,0,:]
+        
         encoder = Bidirectional(LSTM(1024, return_sequences=True, name='lstm_1'))(X)
         X = TimeDistributed(BatchNormalization(name='batchnorm_1'))(encoder)
-        #X = TimeDistributed(Dropout(0.2, name='dropout_3'))(X)
-        X = LSTM(1024, name='lstm_2')(X)
+        
+        X = LSTM(2048, name='lstm_2')(X, initial_state = [feature_vector, K.zeros_like(feature_vector)])
         outputs_encoder = TimeDistributed(Dense(self.num_classes, activation='softmax', name='output_1'))(encoder)
         outputs_decoder = Dense(48, activation='softmax', name='output_2')(X)
         outputs_decoder = Reshape((1,48))(outputs_decoder)
         outputs = keras.layers.concatenate([outputs_encoder, outputs_decoder], axis=1)
-        
+
         model = Model(inputs=inputs, outputs=outputs)
         
         model.compile(
